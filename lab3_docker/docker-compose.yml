@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  postgres_db:
+    image: postgres:15.2
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    command:
+      - postgres
+      - -c
+      - log_statement=all
+    ports:
+      - 5432:5432
+    working_dir: /repo
+    volumes:
+      - ./sql-init:/docker-entrypoint-initdb.d
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_DISABLE_POSTFIX: "true"
+    depends_on:
+      - postgres_db
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres_db
+    environment:
+      - PG_HOST=postgres_db
+      - PG_PORT=5432
+      - PG_USER=hotel-user
+      - PG_PASS=password
+      - PG_DATABASE=hotel
+    volumes:
+      - .:/code
+    command:
+      tail -f /dev/null
+volumes:
+  pgadmin:
