@@ -38,8 +38,8 @@ services:
       - PG_USER=hotel-user
       - PG_PASS=password
       - PG_DATABASE=hotel
-    volumes:
-      - .:/code
+#    volumes:
+#      - .:/code
     command:
       tail -f /dev/null
 volumes:
