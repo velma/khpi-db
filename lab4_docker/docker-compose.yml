@@ -1,0 +1,49 @@
+version: '3.8'
+
+# this docker file is based on this tutorial:
+# https://www.dabbleofdevops.com/blog/setup-a-postgres-python-docker-dev-stack
+
+services:
+  memcached:
+    image: memcached:latest
+  postgres_db:
+    build:
+      context: postgres
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    command: postgres -c pgmemcache.default_servers=memcached
+    ports:
+      - 5432:5432
+    working_dir: /pg
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d
+      - ./postgres/scripts:/pg
+    depends_on:
+      - memcached
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_DISABLE_POSTFIX: "true"
+    depends_on:
+      - postgres_db
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    ports:
+      - 8088:80
+    volumes:
+      - ./nginx/logs:/etc/logs/nginx
+    depends_on:
+      - postgres_db
+volumes:
+  pgadmin:
+
